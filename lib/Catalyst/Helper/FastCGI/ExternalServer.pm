@@ -16,11 +16,11 @@ Catalyst::Helper::FastCGI::ExternalServer - FastCGI daemon start/stop script for
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -254,7 +254,7 @@ start() {
     fi
 # Start daemons.
     echo -n $"Starting [% app %]: "
-		if [ $USER != $EXECUSER ]; then
+		if [ "$USER"x != "$EXECUSER"x ]; then
 			[% UNLESS user == "root" %]$SU -l $EXECUSER -c "([% END %]cd ${EXECDIR};script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} -d > ${LOGFILE} 2>&1[% UNLESS user == "root" %])"[% END %]
 		else
 			cd ${EXECDIR}
