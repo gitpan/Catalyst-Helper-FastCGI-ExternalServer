@@ -16,11 +16,11 @@ Catalyst::Helper::FastCGI::ExternalServer - FastCGI daemon start/stop script for
 
 =head1 VERSION
 
-Version 0.03
+Version 0.031
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.031';
 
 =head1 SYNOPSIS
 
@@ -286,7 +286,7 @@ SOCKET=[% listen %]
 [% END %]
 
 if [ -f "/etc/sysconfig/"$prog ]; then
-		. "/est/sysconfig/"$prog
+		. "/etc/sysconfig/"$prog
 fi
 
 start() {

@@ -1,5 +1,8 @@
 Revision history for Catalyst-Helper-FastCGI-ExternalServer
 
+0.031		2006-12-04/18:26
+				Fixed typo in init script template.
+
 0.03    2006-12-04/16:13
         Fixed log format, Support sysconfig, Support Debian and Ubuntu.
 
