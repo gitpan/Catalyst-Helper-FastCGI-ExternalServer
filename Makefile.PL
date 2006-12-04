@@ -12,6 +12,8 @@ requires('Catalyst::Utils');
 
 requires('Cwd');
 requires('DateTime');
+requires('FCGI');
+requires('FCGI::ProcManager');
 requires('File::Spec');
 requires('Getopt::Long');
 

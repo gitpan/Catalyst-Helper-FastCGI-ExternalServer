@@ -16,11 +16,11 @@ Catalyst::Helper::FastCGI::ExternalServer - FastCGI daemon start/stop script for
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -72,8 +72,9 @@ In your helper script
 
 =head1 DESCRIPTION
 
-This init script maybe be able to run on RedHat Linux, Fedora Core.
-We will support another Linux distribution.
+This module allows configuration using /etc/sysconfig/myapp.
+First make a file called /etc/sysconfig/myapp and then write some variables in it.
+The variables that you add to the file will automatically override the environment variables.
 
 =head1 METHODS
 
@@ -164,8 +165,29 @@ sub _parse_args {
 
 =head1 AUTHORS
 
-Toru Yamaguchi, C<< <zigorou at cpan.org> >>
-Naoya Sano, C<< sano at naoya.net >>
+=over 2
+
+=item Toru Yamaguchi, C<< <zigorou at cpan.org> >>
+
+Making this module.
+
+=item Naoya Sano, C<< <sano at naoya.net> >>
+
+Making init script template for FedoraCore, RedHat.
+
+=item Daniel Burke
+
+Supporting Debian, Ubuntu.
+
+=back
+
+=head1 THANKS
+
+=over 2
+
+=item Songhee Han
+
+=back
 
 =head1 BUGS
 
@@ -231,8 +253,24 @@ __script__
 # pidfile: [% pidfile %]
 #
 # [% date %] by [% author %]
-# Source function library.
-. /etc/rc.d/init.d/functions
+
+# Load in the best success and failure functions we can find
+if [ -f /etc/rc.d/init.d/functions ]; then
+    . /etc/rc.d/init.d/functions
+else
+    # Else locally define the functions
+    success() {
+        echo -e "\n\t\t\t[ OK ]";
+        return 0;
+    }
+
+    failure() {
+        local error_code=$?
+        echo -e "\n\t\t\t[ Failure ]";
+        return $error_code
+    }
+fi
+
 RETVAL=0
 prog="[% appprefix %]"
 [% UNLESS user == "root" %]SU=su
@@ -247,6 +285,10 @@ SOCKET=[% listen %]
 [% FOREACH item IN env %]export [% item.key %]="[% item.value %]"
 [% END %]
 
+if [ -f "/etc/sysconfig/"$prog ]; then
+		. "/est/sysconfig/"$prog
+fi
+
 start() {
     if [ -f $PID ]; then
         echo "already running..."
@@ -254,11 +296,12 @@ start() {
     fi
 # Start daemons.
     echo -n $"Starting [% app %]: "
+    echo -n "["`date +"%Y-%m-%d %H:%M:%S"`"] " >> ${LOGFILE}
 		if [ "$USER"x != "$EXECUSER"x ]; then
-			[% UNLESS user == "root" %]$SU -l $EXECUSER -c "([% END %]cd ${EXECDIR};script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} -d > ${LOGFILE} 2>&1[% UNLESS user == "root" %])"[% END %]
+			[% UNLESS user == "root" %]$SU -c "([% END %]cd ${EXECDIR};script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} -d >> ${LOGFILE} 2>&1[% UNLESS user == "root" %])" $EXECUSER [% END %]
 		else
 			cd ${EXECDIR}
-			script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} -d > ${LOGFILE} 2>&1
+			script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} -d >> ${LOGFILE} 2>&1
 		fi
     RETVAL=$?
     [ $RETVAL -eq 0 ] && success || failure $"$prog start"
@@ -268,7 +311,8 @@ start() {
 stop() {
         # Stop daemons.
     echo -n $"Shutting down [% app %]: "
-    /bin/kill `cat $PID 2>/dev/null ` >/dev/null 2>&1 && success || failure $"$prog stop"
+		echo -n "["`date +"%Y-%m-%d %H:%M:%S"`"] " >> ${LOGFILE}
+    /bin/kill `cat $PID 2>/dev/null ` >/dev/null 2>&1 && (success; echo "Stoped" >> ${LOGFILE} ) || (failure $"$prog stop";echo "Stop failed" >> ${LOGFILE} )
     /bin/rm $PID >/dev/null 2>&1
     RETVAL=$?
     echo
