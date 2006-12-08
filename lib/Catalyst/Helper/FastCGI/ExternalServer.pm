@@ -16,11 +16,11 @@ Catalyst::Helper::FastCGI::ExternalServer - FastCGI daemon start/stop script for
 
 =head1 VERSION
 
-Version 0.031
+Version 0.04
 
 =cut
 
-our $VERSION = '0.031';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
@@ -60,7 +60,7 @@ In your helper script
       specify logfile path
       default is /dev/null
 
-    M manager (optional)
+    M=[val] manager=[val] (optional)
 
       specify alternate process manager
       (FCGI::ProcManager sub-class)
@@ -187,6 +187,12 @@ Supporting Debian, Ubuntu.
 
 =item Songhee Han
 
+English translating.
+
+=item LTjake
+
+Bug reporting.
+
 =back
 
 =head1 BUGS
@@ -280,6 +286,7 @@ PID=[% pidfile %]
 LOGFILE=[% logfile %]
 PROCS=[% nproc %]
 SOCKET=[% listen %]
+[% IF (manager) %]MANAGER=[% manager %][% END %]
 
 # your application environment variables
 [% FOREACH item IN env %]export [% item.key %]="[% item.value %]"
@@ -298,10 +305,10 @@ start() {
     echo -n $"Starting [% app %]: "
     echo -n "["`date +"%Y-%m-%d %H:%M:%S"`"] " >> ${LOGFILE}
 		if [ "$USER"x != "$EXECUSER"x ]; then
-			[% UNLESS user == "root" %]$SU -c "([% END %]cd ${EXECDIR};script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} -d >> ${LOGFILE} 2>&1[% UNLESS user == "root" %])" $EXECUSER [% END %]
+			[% UNLESS user == "root" %]$SU -c "([% END %]cd ${EXECDIR};script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} [% IF (manager) %]-m ${MANAGER} [% END %]-d >> ${LOGFILE} 2>&1[% UNLESS user == "root" %])" $EXECUSER [% END %]
 		else
 			cd ${EXECDIR}
-			script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} -d >> ${LOGFILE} 2>&1
+			script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} [% IF (manager) %]-m ${MANAGER} [% END %]-d >> ${LOGFILE} 2>&1
 		fi
     RETVAL=$?
     [ $RETVAL -eq 0 ] && success || failure $"$prog start"
