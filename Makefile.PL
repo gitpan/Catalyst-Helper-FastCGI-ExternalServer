@@ -17,7 +17,7 @@ requires('FCGI::ProcManager');
 requires('File::Spec');
 requires('Getopt::Long');
 
-build_requires('Test::More');
+use_test_base;
 
 auto_include;
 auto_install;

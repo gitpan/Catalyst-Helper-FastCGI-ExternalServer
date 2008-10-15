@@ -16,17 +16,17 @@ Catalyst::Helper::FastCGI::ExternalServer - FastCGI daemon start/stop script for
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
 In your helper script
 
-	./script/myapp_create.pl FastCGI::ExternalServer [options]
+  ./script/myapp_create.pl FastCGI::ExternalServer [options]
 
 =head2 OPTIONS
 
@@ -87,80 +87,79 @@ generate init script
 sub mk_stuff {
     my ( $self, $helper, @args ) = @_;
 
-		my $config = {
-				listen => undef,
-				nproc => 1,
-				pidfile => undef,
-				manager => undef,
-				env => {},
-				user => 'root',
-				logfile => '/dev/null',
-				app => $helper->{app},
-				author => $helper->{author},
-				home => realpath($helper->{base}),
-				appprefix => Catalyst::Utils::appprefix($helper->{app}),
-				date => DateTime->now->ymd,
-				version => __PACKAGE__->VERSION
-		};
+    my $config = {
+        listen    => undef,
+        nproc     => 1,
+        pidfile   => undef,
+        manager   => undef,
+        env       => {},
+        user      => 'root',
+        logfile   => '/dev/null',
+        app       => $helper->{app},
+        author    => $helper->{author},
+        home      => realpath( $helper->{base} ),
+        appprefix => Catalyst::Utils::appprefix( $helper->{app} ),
+        date      => DateTime->now->ymd,
+        version   => __PACKAGE__->VERSION
+    };
 
-		$self->_parse_args($config, @args);
-		
-		$config->{script} = $config->{appprefix} . "_fastcgi_server.sh";
-		$config->{fastcgi_script} = $config->{appprefix} . "_fastcgi.pl";
+    $self->_parse_args( $config, @args );
 
-		my $script_file = File::Spec->catfile($helper->{base}, 'script', $config->{script});
+    $config->{script}         = $config->{appprefix} . "_fastcgi_server.sh";
+    $config->{fastcgi_script} = $config->{appprefix} . "_fastcgi.pl";
 
-		# print dump $config;
-		# return;
-		
-		$helper->render_file('script', $script_file, $config);
-		chmod 0755, $script_file;
+    my $script_file
+        = File::Spec->catfile( $helper->{base}, 'script', $config->{script} );
+
+    $helper->render_file( 'script', $script_file, $config );
+    chmod 0755, $script_file;
 }
 
 sub _parse_args {
-		my ($self, $config, @args) = @_;
+    my ( $self, $config, @args ) = @_;
 
-		local @ARGV = ();
+    local @ARGV = ();
 
-		foreach (@args) {
-				my ( $key, $value ) = split /=/;
-				$key ||= $_;
+    foreach (@args) {
+        my ( $key, $value ) = split /=/;
+        $key ||= $_;
 
-				push(@ARGV, "--$key");
-				push(@ARGV, $value) if (defined $value);
-		}
+        push( @ARGV, "--$key" );
+        push( @ARGV, $value ) if ( defined $value );
+    }
 
-		my $listen = undef;
-		my $nproc = 1;
-		my $pidfile = File::Spec->catfile('/var/run', $config->{appprefix} . '.pid');
-		my $manager = undef;
-		my $daemon = undef;
-		my $env = undef;
-		my $user = 'root';
-		my $logfile = '/dev/null';
-		
-		GetOptions(
-				'listen|l=s'  => \$listen,
-				'nproc|n=i'   => \$nproc,
-				'pidfile|p=s' => \$pidfile,
-				'manager|M=s' => \$manager,
-				'env|e=s'     => \$env,
-				'user|u=s'    => \$user,
-				'logfile|o=s' => \$logfile
-		);
+    my $listen = undef;
+    my $nproc  = 1;
+    my $pidfile
+        = File::Spec->catfile( '/var/run', $config->{appprefix} . '.pid' );
+    my $manager = undef;
+    my $daemon  = undef;
+    my $env     = undef;
+    my $user    = 'root';
+    my $logfile = '/dev/null';
 
-		$config->{listen} = realpath($listen) if ($listen);
-		$config->{nproc} = int $nproc if ($nproc);
-		$config->{pidfile} = realpath($pidfile) if ($pidfile);
-		$config->{manager} = $manager if ($manager);
-		$config->{user} = $user if ($user);
-		$config->{logfile} = realpath($logfile) if ($logfile);
-		$config->{env}    = ($env) ? {
-				map {split /:/} 
-				split /,/ => $env
-		} : {};
+    GetOptions(
+        'listen|l=s'  => \$listen,
+        'nproc|n=i'   => \$nproc,
+        'pidfile|p=s' => \$pidfile,
+        'manager|M=s' => \$manager,
+        'env|e=s'     => \$env,
+        'user|u=s'    => \$user,
+        'logfile|o=s' => \$logfile
+    );
 
-		
+    $config->{listen}  = realpath($listen)  if ($listen);
+    $config->{nproc}   = int $nproc         if ($nproc);
+    $config->{pidfile} = realpath($pidfile) if ($pidfile);
+    $config->{manager} = $manager           if ($manager);
+    $config->{user}    = $user              if ($user);
+    $config->{logfile} = realpath($logfile) if ($logfile);
+    $config->{env}     = ($env) ? {
+        map { split /:/ }
+            split /,/ => $env
+        }
+        : {};
+
 }
 
 =head1 AUTHORS
@@ -242,7 +241,7 @@ under the same terms as Perl itself.
 
 =cut
 
-1;    # End of Catalyst::Helper::FastCGI::ExternalServer
+1; # End of Catalyst::Helper::FastCGI::ExternalServer
 
 __DATA__
 
@@ -290,71 +289,76 @@ SOCKET=[% listen %]
 
 # your application environment variables
 [% FOREACH item IN env %]export [% item.key %]="[% item.value %]"
-[% END %]
+[% END -%]
 
 if [ -f "/etc/sysconfig/"$prog ]; then
-		. "/etc/sysconfig/"$prog
+  . "/etc/sysconfig/"$prog
 fi
 
 start() {
-    if [ -f $PID ]; then
-        echo "already running..."
-        return 1
+  if [ -f $PID ]; then
+    echo "already running..."
+      return 1
     fi
-# Start daemons.
+    # Start daemons.
     echo -n $"Starting [% app %]: "
+    touch ${LOGFILE}
     echo -n "["`date +"%Y-%m-%d %H:%M:%S"`"] " >> ${LOGFILE}
-		if [ "$USER"x != "$EXECUSER"x ]; then
-			[% UNLESS user == "root" %]$SU -c "([% END %]cd ${EXECDIR};script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} [% IF (manager) %]-m ${MANAGER} [% END %]-d >> ${LOGFILE} 2>&1[% UNLESS user == "root" %])" $EXECUSER [% END %]
-		else
-			cd ${EXECDIR}
-			script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} [% IF (manager) %]-m ${MANAGER} [% END %]-d >> ${LOGFILE} 2>&1
-		fi
+    if [ "$USER"x != "$EXECUSER"x ]; then
+      [% UNLESS user == "root" %]$SU -c "([% END -%]cd ${EXECDIR};script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} [% IF (manager) %]-m ${MANAGER} [% END %]-d >> ${LOGFILE} 2>&1[% UNLESS user == "root" %])" $EXECUSER [% END %]
+    else
+      cd ${EXECDIR}
+      script/[% fastcgi_script %] -n ${PROCS} -l ${SOCKET} -p ${PID} [% IF (manager) %]-m ${MANAGER} [% END %]-d >> ${LOGFILE} 2>&1
+    fi
     RETVAL=$?
     [ $RETVAL -eq 0 ] && success || failure $"$prog start"
     echo
     return $RETVAL
 }
+
 stop() {
-        # Stop daemons.
-    echo -n $"Shutting down [% app %]: "
-		echo -n "["`date +"%Y-%m-%d %H:%M:%S"`"] " >> ${LOGFILE}
-    /bin/kill `cat $PID 2>/dev/null ` >/dev/null 2>&1 && (success; echo "Stoped" >> ${LOGFILE} ) || (failure $"$prog stop";echo "Stop failed" >> ${LOGFILE} )
-    /bin/rm $PID >/dev/null 2>&1
-    RETVAL=$?
-    echo
-    return $RETVAL
+  # Stop daemons.
+  echo -n $"Shutting down [% app %]: "
+  echo -n "["`date +"%Y-%m-%d %H:%M:%S"`"] " >> ${LOGFILE}
+  /bin/kill `cat $PID 2>/dev/null ` >/dev/null 2>&1 && (success; echo "Stoped" >> ${LOGFILE} ) || (failure $"$prog stop";echo "Stop failed" >> ${LOGFILE} )
+  /bin/rm $PID >/dev/null 2>&1
+  RETVAL=$?
+  echo
+  return $RETVAL
 }
+
 status() {
-# show status
-    if [ -f $PID ]; then
-        echo "${prog} (pid `/bin/cat $PID`) is running..."
-    else
-        echo "${prog} is stopped"
-    fi
-    return $?
+  # show status
+  if [ -f $PID ]; then
+    echo "${prog} (pid `/bin/cat $PID`) is running..."
+  else
+    echo "${prog} is stopped"
+  fi
+  return $?
 }
+
 restart() {
-    stop
-    start
+  stop
+  start
 }
+
 # See how we were called.
 case "$1" in
-    start)
-        start
-        ;;
-    stop)
-        stop
-        ;;
-    restart)
-        stop
-        start
-        ;;
-    status)
-        status
-        ;;
-    *)
-        echo $"Usage: $0 {start|stop|restart|status}"
-        exit 1
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  status)
+    status
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop|restart|status}"
+    exit 1
 esac
 exit $?
